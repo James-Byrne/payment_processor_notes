@@ -261,3 +261,46 @@ Cache-Control: no-cache
 - List subscription
 - Lookup an invoice for a subscription
 - List all invoices for a subscription
+
+
+## Authorization
+
+#### Obtain an access token with client credentials
+
+|Param|Type|Default Value|
+|---|---|---|
+| Http Code     | Number  | 201|
+| tokenType     | String  | "Bearer"|
+| expiresIn     | Number  | 10000|
+| accessToken   | String  | 0.AQAAAVF-mqsiAAAAAAAbd0A71bIG8IUwcgHV7mAYiG7J.EAAQsWDnpqRj7WwyFVLTsdo0yXWh9L4|
+
+#### Obtain an access token using auth code.
+This endpoint is used in conjunction with the 3rd endpoint. This is the first
+step and returns an auth code. The 3rd step trades this auth code for an access token.
+
+|Param|Type|Default Value|
+|---|---|---|
+| Http Code     | Number  | 200|
+| data          | String  | Header|
+
+#### Exchange your auth code for an access token
+
+|Param|Type|Default Value|
+|---|---|---|
+|Http Code     | Number  | 201|
+|tokenType     | String  | "Bearer"|
+|expiresIn     | Number  | 10000|
+|accessToken   | String  | 0.AQAAAVF-mqsiAAAAAAAbd0A71bIG8IUwcgHV7mAYiG7J.EAAQsWDnpqRj7WwyFVLTsdo0yXWh9L4|
+|refreshToken  | String  | 0.AgAAAUgUGIkyAAAAB1jwsODI5PCkVNOZul5AJ01mYtdh.ezGCYhN5YD22-BCOPX6U-muc72o|
+|scope         | String  | "subscription_payment"|
+
+#### Exchange a refresh token for an access token
+
+|Param|Type|Default Value|
+|---|---|---|
+| Http Code     | Number  | 201|
+| tokenType     | String  | "Bearer"|
+| expiresIn     | Number  | 10000|
+| accessToken   | String  | 0.AQAAAVF-mqsiAAAAAAAbd0A71bIG8IUwcgHV7mAYiG7J.EAAQsWDnpqRj7WwyFVLTsdo0yXWh9L4|
+| refreshToken  | String  | 0.AgAAAUgUGIkyAAAAB1jwsODI5PCkVNOZul5AJ01mYtdh.ezGCYhN5YD22-BCOPX6U-muc72o|
+| scope         | String  | "subscription_payment"|
