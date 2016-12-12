@@ -308,20 +308,25 @@ step and returns an auth code. The 3rd step trades this auth code for an access 
 
 ## Payments
 
+### Send Payment
+An outbound request that will issue a payment from your merchant account to the recipient.
+You can push to a Neteller account or any valid email and NETELLER will notify the recipient via email. If the reciepient is a NETELLER member the funds will deposit immediately. If not they will be required to register in order to access the funds. A URL to the signup flow is returned in the payment request for this purpose. If additional profile info is supplied with the request this will be used to auto-fill the signup page the user will be directed to.
+
+
+|Item                                | Value              |
+|------------------------------------|--------------------|
+| Scope required to initiate request | none (default)     |
+| Scope(s) impacting response        | `account_enhanced_profile account_contact`|
+| Expandable Resources	             | customer           |
+| Related Resources (if applicable)	 | none               |
+
 #### Send Payment To Email - Request
 
 | Param                                 | Type    | Required |
 |---------------------------------------|---------|----------|
-| payeeProfile                          | `{}`    | Yes      |
+| [payeeProfile](#payeeProfile)         | `{}`    | Yes      |
 | [transaction](#transaction-request)   | `{}`    | Yes      |
 | message                               | String  | No       |
-
-___payeeProfile___
-> The recipient of the payment. At minimum, the payee's email address or NETELLER Account ID must be supplied.
-
-| Param            | Type    | Validations / Notes  |
-|------------------|---------|----------------------|
-| email/account_id | String  | Is a String          |
 
 
 #### Send Payment To Email - Response
@@ -331,7 +336,7 @@ ___payeeProfile___
 |---------------------------------------|---------|----------|
 | customer                              | `{}`    | Yes      |
 | [transaction](#transaction-response)  | `{}`    | Yes      |
-| links                                 | `[]`    | No       |
+| [links](#links)                       | `[]`    | No       |
 
 ___customer___ `Expandable`
 > The associated customer information for the payment.
@@ -342,14 +347,6 @@ ___customer___ `Expandable`
 | url         | String  | String, is url      |
 | rel         | String  | String, `customer`  |
 | method      | String  | String, `GET`       |
-
-___links___
-> This is an array of self-referencing links. Takes the form of `[{}]`
-
-| Param | Type    | Validations / Notes |
-|-------|---------|---------------------|
-| rel   | String  | `"self"`            |
-| href  | String  | Is String           |
 
 
 #### Send payment to non-registered email with profile data to provide a signup link - Request
@@ -365,11 +362,11 @@ ___links___
 #### Send payment to non-registered email with profile data to provide a signup link - Response
 > Http Code 201
 
-| Param         | Type    | Required |
-|---------------|---------|----------|
-| customer      | `{}`    | Yes      |
-| transaction   | `{}`    | Yes      |
-| links         | `[{}]`  | No       |
+| Param                                 | Type    | Required |
+|---------------------------------------|---------|----------|
+| customer                              | `{}`    | Yes      |
+| [transaction](#transaction-response)  | `{}`    | Yes      |
+| [links](#links)                       | `[{}]`  | No       |
 
 
 ___customer___
@@ -381,6 +378,76 @@ ___customer___
 | accountProfile    | `{}`    | See [object](#accountProfile)               |
 | verificationLevel | String  | See notes on verificationLevel below        |
 | availableBalance  | `{}`    | See [object](#availableBalance)             |
+
+
+
+
+
+
+
+
+### Request Payment
+An inbound payment request which facilitates collecting payment from a NETELLER member to your merchant account.
+
+You are required to render a secure browser form. This allows the user to enter the amount to transfer and confirm the transaction with their verification code (Secure Id or Google Authenticator OTP). If approved funds will transfer immediately. NETELLER will notify the sender via email.
+
+|Item                                | Value              |
+|------------------------------------|--------------------|
+| Scope required to initiate request | none (default)     |
+| Scope(s) impacting response        | `account_enhanced_profile account_contact`|
+| Expandable Resources	             | customer           |
+| Related Resources (if applicable)	 | none               |
+
+
+#### Request Payment - Request
+
+| Param                                | Type | Validations / Notes           |
+|--------------------------------------|------|-------------------------------|
+| [paymentMethod](#paymentMethod)      | `{}` | Unique to merchants system    |
+| [transaction](#transaction-response) | `{}` | Amount in cents               |
+| verificationCode  | String  | 6 digit Secure Id, or Authentication Code OTP |
+
+The member verification code for the transaction. This is the members 6 digit Secure Id, or Authentication Code OTP (one time password) if the member has two step authentication enabled.
+
+#### Request Payment - Response
+> Http Code 201
+
+| Param                                 | Type    | Required |
+|---------------------------------------|---------|----------|
+| customer                              | `{}`    | Yes      |
+| [transaction](#transaction-response)  | `{}`    | Yes      |
+| [links](#links)                       | `[{}]`  | No       |
+
+
+
+### Lookup Payment
+Can be used to inquire about any API initiated transactions. Additional detail will be provided depending on the transaction type and the current state of the transaction. This API request returns a payment object. Response values vary dependent upon the type of payment being queried. If using your merchant reference id pass the parameter of ?refType=merchantRefId to denote that you are querying with your merchant reference ID and not the NETELLER Transaction ID.
+
+|Item                                | Value              |
+|------------------------------------|--------------------|
+| Scope required to initiate request | none (default)     |
+| Scope(s) impacting response        | `account_enhanced_profile account_contact`|
+| Expandable Resources	             | customer           |
+| Related Resources (if applicable)	 | none               |
+
+#### Lookup Payment - Request
+> This is a `GET` request with all params in the query string
+
+| Params    | Type    | Validations / Notes   | Default/Possible Values      |
+|-----------|---------|-----------------------|------------------------------|
+| id        | String  | id of the transaction | `required param`             |
+| refType   | String  | Optional ID type      | `NETELLER` / `merchantRefId` |
+| expand    | String  | Resource to expand    |  `null` / `customer`         |
+
+
+#### Lookup Payment - Response
+
+| Param                                  | Type    | Required |
+|----------------------------------------|---------|----------|
+| customer                               | `{}`    | Yes      |
+| [billingDetails](#billingDetail)       | `{}`    | Yes      |
+| [transaction](#transaction-response)   | `{}`    | Yes      |
+| [links](#links)                        | `[{}]`  | No       |
 
 
 
@@ -426,11 +493,24 @@ ___customer___
 | feeAmount   | Number  | Cost of fees, in cents                  |
 | feeCurrency | String  | Currency, 2-3 length string             |
 
+#### links
+> This is an array of self-referencing links. Takes the form of `[{}]`
+
+| Param | Type    | Validations / Notes |
+|-------|---------|---------------------|
+| rel   | String  | `"self"`            |
+| href  | String  | Is String           |
+
 
 #### accountProfile
 #### payeeProfile
-> `Response`  :  The associated account profile. This is normally nested within the customer object.
 > `Request`  : The recipient of the payment. At minimum, the payee's email address or NETELLER Account ID must be supplied.
+
+| Param            | Type    | Validations / Notes  |
+|------------------|---------|----------------------|
+| email/account_id | String  | Is a String          |
+
+> `Response`  :  The associated account profile. This is normally nested within the customer object.
 
 | Param                   | Type    | Validations / Notes               |
 |-------------------------|---------|-----------------------------------|
@@ -483,3 +563,28 @@ ___customer___
 |-----------|---------|-------------------------|
 | amount    | Number  | Amount in cents         |
 | currency  | Number  | The associated currency |
+
+
+#### paymentMethod
+> The source of funds for the transfer into the merchant account.
+
+| Param     | Type    | Validations / Notes                                    |
+|-----------|---------|--------------------------------------------------------|
+| type      | String  | Type of payment, `Neteller`                            |
+| value     | String  | payment type and source of funds `jsmith@neteller.com` |
+
+
+#### billingDetail
+Element                 |Type                       |Description
+---                     |---                        |---
+email                   |string `length<=100`   |The account email address.
+firstName               |string `length<=25`    |The clients first name, or given name.
+lastName                |string `length<=25`    |The clients last name, or family name.
+address1                |string `length<=35`    |The clients residential, or street address.
+address2                |string `length<=35`    |Continuation of the clients residential, or street address.
+address3                |string `length<=35`    |Continuation of the clients residential, or street address.
+city                    |string `length<=50`    |The clients city of residence.
+countrySubdivisionCode  |string `length=2`      |The ISO 3166-2 code indicating the state/province/district or other value denoting the clients country subdivision \(e.g. BE=Berlin. 13=Tôkyô \[Tokyo\], AB=Alberta\)
+country                 |string `length=2`      |The ISO 3166-1 Alpha 2-code for the clients country of residence \(e.g. Germany = DE, JP=Japan. CA=Canada\)
+postCode                |string `length<=10`    |The zip code, or postal code, of the clients residence.
+lang                    |string `length=5`      |The preferred language of communication. See [Languages](#languages) for complete list.
