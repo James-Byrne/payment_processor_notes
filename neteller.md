@@ -267,40 +267,249 @@ Cache-Control: no-cache
 
 #### Obtain an access token with client credentials
 
-|Param|Type|Default Value|
-|---|---|---|
-| Http Code     | Number  | 201|
-| tokenType     | String  | "Bearer"|
-| expiresIn     | Number  | 10000|
+| Param         | Type    | Default Value |
+|---------------|---------|---------------|
+| Http Code     | Number  | 201           |
+| tokenType     | String  | `"Bearer"`    |
+| expiresIn     | Number  | 10000         |
 | accessToken   | String  | 0.AQAAAVF-mqsiAAAAAAAbd0A71bIG8IUwcgHV7mAYiG7J.EAAQsWDnpqRj7WwyFVLTsdo0yXWh9L4|
 
 #### Obtain an access token using auth code.
 This endpoint is used in conjunction with the 3rd endpoint. This is the first
 step and returns an auth code. The 3rd step trades this auth code for an access token.
 
-|Param|Type|Default Value|
-|---|---|---|
-| Http Code     | Number  | 200|
-| data          | String  | Header|
+| Param         | Type    | Default Value |
+|---------------|---------|---------------|
+| Http Code     | Number  | 200           |
+| data          | String  | Header        |
 
 #### Exchange your auth code for an access token
 
-|Param|Type|Default Value|
-|---|---|---|
-|Http Code     | Number  | 201|
-|tokenType     | String  | "Bearer"|
-|expiresIn     | Number  | 10000|
-|accessToken   | String  | 0.AQAAAVF-mqsiAAAAAAAbd0A71bIG8IUwcgHV7mAYiG7J.EAAQsWDnpqRj7WwyFVLTsdo0yXWh9L4|
-|refreshToken  | String  | 0.AgAAAUgUGIkyAAAAB1jwsODI5PCkVNOZul5AJ01mYtdh.ezGCYhN5YD22-BCOPX6U-muc72o|
-|scope         | String  | "subscription_payment"|
+| Param        | Type   | Default Value |
+|--------------|--------|---------------|
+| Http Code    | Number | 201           |
+| tokenType    | String | `"Bearer"`    |
+| expiresIn    | Number | 10000         |
+| accessToken  | String | 0.AQAAAVF-mqsiAAAAAAAbd0A71bIG8IUwcgHV7mAYiG7J.EAAQsWDnpqRj7WwyFVLTsdo0yXWh9L4|
+| refreshToken | String | 0.AgAAAUgUGIkyAAAAB1jwsODI5PCkVNOZul5AJ01mYtdh.ezGCYhN5YD22-BCOPX6U-muc72o|
+| scope        | String | "subscription_payment" |
 
 #### Exchange a refresh token for an access token
 
-|Param|Type|Default Value|
-|---|---|---|
-| Http Code     | Number  | 201|
-| tokenType     | String  | "Bearer"|
-| expiresIn     | Number  | 10000|
+| Param         | Type    | Default Value |
+|---------------|---------|---------------|
+| Http Code     | Number  | 201           |
+| tokenType     | String  | `"Bearer"`    |
+| expiresIn     | Number  | 10000         |
 | accessToken   | String  | 0.AQAAAVF-mqsiAAAAAAAbd0A71bIG8IUwcgHV7mAYiG7J.EAAQsWDnpqRj7WwyFVLTsdo0yXWh9L4|
 | refreshToken  | String  | 0.AgAAAUgUGIkyAAAAB1jwsODI5PCkVNOZul5AJ01mYtdh.ezGCYhN5YD22-BCOPX6U-muc72o|
 | scope         | String  | "subscription_payment"|
+
+
+## Payments
+
+#### Send Payment To Email - Request
+
+| Param         | Type    | Required |
+|---------------|---------|----------|
+| payeeProfile  | `{}`    | Yes      |
+| transaction   | `{}`    | Yes      |
+| message       | String  | No       |
+
+___payeeProfile___
+> The recipient of the payment. At minimum, the payee's email address or NETELLER Account ID must be supplied.
+
+| Param            | Type    | Validations / Notes  |
+|------------------|---------|----------------------|
+| email/account_id | String  | Is a String          |
+
+___Transaction___
+> Details about the payment.
+
+| Param         | Type    | Validations / Notes         |
+|---------------|---------|-----------------------------|
+| merchanRefId  | String  | Unique to merchants system  |
+| amount        | Number  | Amount in cents             |
+| currency      | String  | 2-3 letter identifier       |
+
+
+#### Send Payment To Email - Response
+> Http Code : 201
+
+| Param       | Type    | Required |
+|-------------|---------|----------|
+| customer    | `{}`    | Yes      |
+| transaction | `{}`    | Yes      |
+| links       | `[]`    | No       |
+
+___customer___ `Expandable`
+> The associated customer information for the payment.
+> Note the actual object exists as `customer : { link: { url: "" ... }}`
+
+| Param       | Type    | Validations / Notes |
+|-------------|---------|---------------------|
+| url         | String  | String, is url      |
+| rel         | String  | String, `customer`  |
+| method      | String  | String, `GET`       |
+
+___transaction___
+> Details about the payment.
+
+| Param           | Type    | Validations / Notes                             |
+|-----------------|---------|-------------------------------------------------|
+| merchanRefId    | String  | Unique to merchants system                      |
+| amount          | Number  | Amount in cents                                 |
+| currency        | String  | 2-3 letter identifier                           |
+| id              | Number  | Neteller transaction id                         |
+| transactionType | String  | Type/Specific product of transaction            |
+| createDate      | String  | ISO 8601 format (UTC) YYYY-MM-DDThh:mm:ssZ      |
+| updateDate      | String  | ISO 8601 format (UTC) YYYY-MM-DDThh:mm:ssZ      |
+| fees            | `[{}]`  | Fees (list) associated with transaction         |
+| status          | String  | `accepted pending declined cancelled failed`    |
+
+___fees___
+> List of fees associated with this transaction.
+
+| Param       | Type    | Validations / Notes                     |
+|-------------|---------|-----------------------------------------|
+| feeType     | String  | Description of fees e.g. `service_fee`  |
+| feeAmount   | Number  | Cost of fees, in cents                  |
+| feeCurrency | String  | Currency, 2-3 length string             |
+
+___links___
+> This is an array of self-referencing links. Takes the form of `[{}]`
+
+| Param | Type    | Validations / Notes |
+|-------|---------|---------------------|
+| rel   | String  | `"self"`            |
+| href  | String  | Is String           |
+
+
+#### Send payment to non-registered email with profile data to provide a signup link - Request
+
+| Param         | Type    | Required |
+|---------------|---------|----------|
+| payeeProfile  | `{}`    | Yes      |
+| transaction   | `{}`    | Yes      |
+| message       | String  | No       |
+
+
+___payeeProfile___
+> The recipient of the payment. At minimum, the payee's email address or NETELLER Account ID must be supplied.
+
+| Param                   | Type    | Validations / Notes     |
+|-------------------------|---------|-------------------------|
+| email/account_id        | String  | Is a String             |
+| firstName               | String  | Is an email address     |
+| lastName                | String  | Is a String             |
+| address1                | String  | Is a String             |
+| address2                | String  | Is a String             |
+| address3                | String  | Is a String             |
+| city                    | String  | Is a String             |
+| countrySubdivisionCode  | String  | ISO 3166-2 code         |
+| country                 | String  | ISO 3166-1 Alpha 2-code |
+| postcode                | String  | Is a String             |
+| gender                  | String  | Is a string             |
+| contactDetail           | `{}`    | See object              |
+| dateOfBirth             | `{}`    | See object              |
+| accountPreferences      | `{}`    | See object              |
+
+___contactDetail___
+> An array of contact numbers. Can accept up to 2 phone numbers, the first number will be considered primary. Phone numbers should contain no special characters.
+
+| Param   | Type    | Validations / Notes                                   |
+|---------|---------|-------------------------------------------------------|
+| type    | String  | `landLine mobile`                                     |
+| value   | String  | The full phone number including country dialing code. |
+
+___dateOfBirth___
+> Registered birthdate for the account holder.
+
+| Param   | Type    | Validations / Notes |
+|---------|---------|---------------------|
+| year    | Number  | YYYY                |
+| month   | Number  | MM                  |
+| day     | Number  | DD                  |
+
+___accountPreferences___
+> The Payees preferred currency and language
+
+| Param     | Type    | Validations / Notes |
+|-----------|---------|---------------------|
+| currency  | String  |The preferred wallet currency of the member. See [Currencies](https://jsapi.apiary.io/apis/netellerrestapiv1/reference/0/payments/send-payment.html#currencies) for complete list. |
+| language  | String  | The preferred language of the member. See [Languages](http://paysafegroup.github.io/neteller_rest_api_v1/#/introduction/technical-introduction/languages) for complete list. |
+
+___transaction___
+> Details about the payment.
+
+| Param         | Type    | Validations / Notes         |
+|---------------|---------|-----------------------------|
+| merchanRefId  | String  | Unique to merchants system  |
+| amount        | Number  | Amount in cents             |
+| currency      | String  | 2-3 letter identifier       |
+
+#### Send payment to non-registered email with profile data to provide a signup link - Response
+> Http Code 201
+
+| Param         | Type    | Required |
+|---------------|---------|----------|
+| customer      | `{}`    | Yes      |
+| transaction   | `{}`    | Yes      |
+| links         | `[{}]`  | No       |
+
+
+___customer___
+> The associated customer information for the payment.
+
+| Param             | Type    | Validations / Notes                         |
+|-------------------|---------|---------------------------------------------|
+| customerId        | String  | `CUS_0d676b4b-0eb8-4d78-af25-e41ab431e325`  |
+| accountProfile    | `{}`    | See [object](#accountProfile)               |
+| verificationLevel | String  | See notes on verificationLevel below        |
+| availableBalance  | `{}`    | See [object](#availableBalance)             |
+
+___accountProfile___
+> The associated account profile.
+
+| Param                   | Type    | Validations / Notes     |
+|-------------------------|---------|-------------------------|
+| email/account_id        | String  | Is a String             |
+| firstName               | String  | Is an email address     |
+| lastName                | String  | Is a String             |
+| address1                | String  | Is a String             |
+| address2                | String  | Is a String             |
+| address3                | String  | Is a String             |
+| city                    | String  | Is a String             |
+| countrySubdivisionCode  | String  | ISO 3166-2 code         |
+| country                 | String  | ISO 3166-1 Alpha 2-code |
+| postcode                | String  | Is a String             |
+| gender                  | String  | Is a string             |
+| contactDetail           | `{}`    | See object              |
+| dateOfBirth             | `{}`    | See object              |
+| accountPreferences      | `{}`    | See object              |
+
+
+___contactDetail___
+> An array of contact numbers. Can accept up to 2 phone numbers, the first number will be considered primary. Phone numbers should contain no special characters.
+
+| Param   | Type    | Validations / Notes                                   |
+|---------|---------|-------------------------------------------------------|
+| type    | String  | `landLine mobile`                                     |
+| value   | String  | The full phone number including country dialing code. |
+
+___dateOfBirth___
+> Registered birthdate for the account holder.
+
+| Param   | Type    | Validations / Notes |
+|---------|---------|---------------------|
+| year    | Number  | YYYY                |
+| month   | Number  | MM                  |
+| day     | Number  | DD                  |
+
+___accountPreferences___
+> The Payees preferred currency and language
+
+| Param     | Type    | Validations / Notes |
+|-----------|---------|---------------------|
+| currency  | String  |The preferred wallet currency of the member. See [Currencies](https://jsapi.apiary.io/apis/netellerrestapiv1/reference/0/payments/send-payment.html#currencies) for complete list. |
+| language  | String  | The preferred language of the member. See [Languages](http://paysafegroup.github.io/neteller_rest_api_v1/#/introduction/technical-introduction/languages) for complete list. |
