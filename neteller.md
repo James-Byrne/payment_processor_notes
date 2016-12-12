@@ -450,10 +450,36 @@ Can be used to inquire about any API initiated transactions. Additional detail w
 | [links](#links)                        | `[{}]`  | No       |
 
 
+### List Payment
+The payments lookup function can be used to retrieve a listing of transactions associated with your account. This API request returns a list of payment objects.
 
+|Item                                | Value              |
+|------------------------------------|--------------------|
+| Scope required to initiate request | none (default)     |
+| Scope(s) impacting response        | none               |
+| Expandable Resources	             | customer           |
+| Related Resources (if applicable)	 | none               |
 
+#### List Payment - Request
+> This is a `GET` request with all params in the query string
 
+| Params    | Type    | Validations / Notes   | Default/Possible Values      |
+|-----------|---------|-----------------------|------------------------------|
+| startDate | String  | Transaction report start date | past 7 days / ISO 8601 format (UTC) YYYY-MM-DDThh:mm:ssZ |
+| endDate   | String  | Transaction report end date. If you supply an endDate you must supply a start date | `null`/ ISO 8601 format (UTC) YYYY-MM-DDThh:mm:ssZ |
+| sortOrder | String  | Sort order (optional) | `desc` on transaction date/ `desc asc` |
+| limit     | Number  | Number of records to return. Max is 100 | 10 / `null`|
+| offset    | Number  | Allows you to fetch the next set of resources        | `null` / `null`|
 
+#### List Payment - Response
+> The first 3 attributes returned in the response are contained within a list `[]`.
+
+| Param                                  | Type    | Required | Index       |
+|----------------------------------------|---------|----------|-------------|
+| customer                               | `{}`    | Yes      | 0           |
+| [billingDetails](#billingDetail)       | `{}`    | Yes      | 1           |
+| [transaction](#transaction-response)   | `{}`    | Yes      | 2           |
+| [links](#links)                        | `[{}]`  | No       | Not in list |
 
 
 # Neteller Objects
